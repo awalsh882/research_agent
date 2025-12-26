@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from claude_agent_sdk import tool
+from research_agent.tools.registry import registered_tool
 
 # Lazy import to avoid dependency issues if python-docx not installed
 docx = None
@@ -32,9 +32,8 @@ def _ensure_docx():
 
 def _get_outputs_dir() -> Path:
     """Get the outputs directory path."""
-    outputs_dir = Path(__file__).parent.parent.parent / "outputs"
-    outputs_dir.mkdir(exist_ok=True)
-    return outputs_dir
+    from research_agent.config import get_outputs_dir
+    return get_outputs_dir()
 
 
 def _create_report(
@@ -151,14 +150,24 @@ def _create_report(
     return output_path
 
 
-@tool(
-    "generate_report",
-    "Generate a professional equity research report as a Word document (.docx). "
-    "Use this after analyzing a company to create a formal report the user can download.",
-    {
+@registered_tool(
+    name="generate_report",
+    description=(
+        "Generate a professional equity research report as a Word document (.docx). "
+        "Use this after analyzing a company to create a formal report the user can download."
+    ),
+    parameters={
+        "company_name": "The company name (e.g., 'DocuSign')",
+        "ticker": "The stock ticker (e.g., 'DOCU')",
+        "sections": (
+            "JSON string with report sections: executive_summary, key_highlights, "
+            "financial_analysis, business_analysis, valuation, risks, key_takeaways"
+        ),
+    },
+    parameter_types={
         "company_name": str,
         "ticker": str,
-        "sections": str,  # JSON string with report sections
+        "sections": str,
     },
 )
 async def generate_report(args: dict[str, Any]) -> dict[str, Any]:

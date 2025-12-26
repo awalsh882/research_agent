@@ -31,11 +31,16 @@ from claude_agent_sdk import (
     create_sdk_mcp_server,
 )
 
-from research_agent.tools.report_tool import generate_report
-from research_agent.tools.introspection import list_tools
+from research_agent.config import config
+from research_agent.tools.registry import ToolRegistry
+
+# Import tools to trigger registration (order matters - report_tool before introspection)
+import research_agent.tools.report_tool  # noqa: F401
+import research_agent.tools.introspection  # noqa: F401
 
 
-SYSTEM_PROMPT = """You are an institutional investment research analyst providing analysis to professional investors at hedge funds, asset managers, and pension funds.
+# Base system prompt without tools section (tools are added dynamically)
+_SYSTEM_PROMPT_BASE = """You are an institutional investment research analyst providing analysis to professional investors at hedge funds, asset managers, and pension funds.
 
 This is a conversational research session. You have memory of the full conversation, so you can:
 - Build on previous analyses when the user asks follow-up questions
@@ -67,22 +72,18 @@ Guidelines:
 - Focus on actionable insights rather than generic observations
 - When asked to compare or contrast, be specific about relative positioning
 
-## Available Tools
-
-You have access to the following tools:
-
-**generate_report**: Generate a professional equity research report as a Word document (.docx).
-Use this when the user asks you to create a formal report, or after completing a thorough analysis
-that would benefit from being saved as a document. The tool requires:
-- company_name: The company name (e.g., "DocuSign")
-- ticker: The stock ticker (e.g., "DOCU")
-- sections: A JSON string containing report sections (executive_summary, key_highlights,
-  financial_analysis, business_analysis, valuation, risks, key_takeaways)
-
-**list_tools**: List all available MCP tools and their capabilities.
-Use this when the user asks what tools you have access to, what you can do, or asks to list your capabilities.
+IMPORTANT: When you call list_tools, report ONLY the tools returned by that tool. Do not add or embellish with other capabilities.
 
 Note: This analysis is for informational purposes only and does not constitute investment advice. Always conduct independent due diligence before making investment decisions."""
+
+
+def get_system_prompt() -> str:
+    """Build the complete system prompt with dynamically generated tools section."""
+    return _SYSTEM_PROMPT_BASE + "\n\n" + ToolRegistry.get_system_prompt_section()
+
+
+# For backwards compatibility
+SYSTEM_PROMPT = get_system_prompt()
 
 
 # Example multi-turn conversation for illustration
@@ -114,25 +115,24 @@ The agent maintains context throughout, enabling deeper and more nuanced
 analysis as the conversation progresses.
 """
 
-# Create MCP server with research tools
-research_tools_server = create_sdk_mcp_server(
-    name="research-tools",
-    version="1.0.0",
-    tools=[generate_report, list_tools],
-)
+def _create_mcp_server():
+    """Create MCP server with all registered tools."""
+    return create_sdk_mcp_server(
+        name=config.agent.mcp_server_name,
+        version=config.agent.mcp_server_version,
+        tools=ToolRegistry.get_tools(),
+    )
 
 
 def get_agent_options() -> ClaudeAgentOptions:
     """Get the agent options with MCP server configured."""
+    server_name = config.agent.mcp_server_name
     return ClaudeAgentOptions(
-        model="claude-sonnet-4-20250514",
-        system_prompt=SYSTEM_PROMPT,
-        max_turns=10,
-        mcp_servers={"research-tools": research_tools_server},
-        allowed_tools=[
-            "mcp__research-tools__generate_report",
-            "mcp__research-tools__list_tools",
-        ],
+        model=config.agent.model,
+        system_prompt=get_system_prompt(),
+        max_turns=config.agent.max_turns,
+        mcp_servers={server_name: _create_mcp_server()},
+        allowed_tools=ToolRegistry.get_allowed_tools(server_name),
     )
 
 

@@ -201,9 +201,8 @@ def generate_agent_diagram() -> str:
 
 def main() -> None:
     """Generate and save the architecture diagram."""
-    # Ensure outputs directory exists
-    outputs_dir = Path(__file__).parent.parent / "outputs"
-    outputs_dir.mkdir(exist_ok=True)
+    from research_agent.config import get_outputs_dir
+    outputs_dir = get_outputs_dir()
 
     # Generate diagram
     diagram_xml = generate_agent_diagram()
