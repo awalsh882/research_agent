@@ -7,7 +7,9 @@ A conversational research agent with memory, powered by the Claude Agent SDK. Pr
 - **Multi-turn conversations** - Agent remembers context across the session
 - **Structured analysis** - Responses formatted for institutional investors
 - **Report generation** - Export research to professional Word documents
-- **Web interface** - Browser-based UI for interactive sessions
+- **Web interface** - Split-pane UI with chat and viewer panels
+- **Slash commands** - Quick actions via `/clear`, `/new`, `/stop`, `/help`
+- **Tool introspection** - Agent can report its own capabilities
 - **Architecture visualization** - Developer tool to inspect agent structure
 
 ## Getting Started
@@ -67,13 +69,26 @@ Query: Generate a research report for this analysis
  financial analysis, risks, and key takeaways]
 ```
 
-## Commands (CLI)
+## Commands
+
+### CLI Commands
 
 | Command | Description |
 |---------|-------------|
 | `quit` / `exit` / `q` | End the session |
 | `new` | Start a fresh conversation (clears context) |
 | `example` | Show example multi-turn conversation |
+
+### Web UI Slash Commands
+
+Type `/` in the chat input to see available commands with autocomplete:
+
+| Command | Description |
+|---------|-------------|
+| `/clear` | Clear the chat history |
+| `/new` | Start a new session (clears context) |
+| `/stop` | Stop the current generation |
+| `/help` | Show available commands |
 
 ## Response Format
 
@@ -93,8 +108,9 @@ The agent has access to:
 | Tool | Description |
 |------|-------------|
 | `generate_report` | Creates a professional equity research report as a Word document (.docx) |
+| `list_tools` | Returns a list of available tools and their capabilities |
 
-Ask the agent to "generate a report" after completing an analysis to save it as a formal document.
+Ask the agent to "generate a report" after completing an analysis to save it as a formal document. Ask "what tools do you have?" to see available capabilities.
 
 ## Project Structure
 
@@ -102,11 +118,14 @@ Ask the agent to "generate a report" after completing an analysis to save it as 
 research_agent/
 ├── __init__.py          # Package exports
 ├── agent.py             # Main agent with ClaudeSDKClient
-├── web.py               # FastAPI web interface
+├── config.py            # Centralized configuration
+├── web.py               # FastAPI web interface with split-pane UI
 ├── architecture.py      # Developer tool for architecture diagrams
 └── tools/
     ├── __init__.py
-    └── report_tool.py   # Report generation tool
+    ├── registry.py      # Self-registering tool system
+    ├── report_tool.py   # Report generation tool
+    └── introspection.py # Tool introspection (list_tools)
 
 outputs/                 # Generated files
 ├── *.docx               # Research reports
@@ -125,11 +144,36 @@ Creates a draw.io diagram visualizing the agent's components, tools, and data fl
 
 ## Customization
 
-Edit `research_agent/agent.py` to modify:
+### Configuration
 
-- **`SYSTEM_PROMPT`** - Customize the analyst persona and response format
-- **`ClaudeAgentOptions`** - Configure max_turns, tools, and other settings
-- **`research_tools_server`** - Add or modify available tools
+Edit `research_agent/config.py` to modify:
+
+- **`AgentConfig`** - Model, max_turns, MCP server settings
+- **`WebConfig`** - Host, port, log level for web UI
+- **`PathConfig`** - Output directories
+
+### Adding New Tools
+
+Tools self-register using the `@registered_tool` decorator:
+
+```python
+from research_agent.tools.registry import registered_tool
+
+@registered_tool(
+    name="my_tool",
+    description="Does something useful",
+    parameters={"param1": "Description of param1"},
+    parameter_types={"param1": str},
+)
+async def my_tool(args: dict[str, Any]) -> dict[str, Any]:
+    # Implementation
+    return {"content": [{"type": "text", "text": "Result"}]}
+```
+
+The tool is automatically:
+- Registered with the MCP server
+- Added to the system prompt
+- Available for introspection via `list_tools`
 
 ## Documentation
 
