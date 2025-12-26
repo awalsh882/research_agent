@@ -1,0 +1,97 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36" version="29.2.9">
+  <diagram name="Research Agent Architecture" id="diagram-1">
+    <mxGraphModel dx="1351" dy="716" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=16;fontStyle=1" value="Investment Research Agent Architecture" vertex="1">
+          <mxGeometry height="40" width="400" x="270" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="user" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1" value="User" vertex="1">
+          <mxGeometry height="50" width="150" x="395" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="cli" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=0" value="CLI Interface&#xa;(Interactive / One-shot)" vertex="1">
+          <mxGeometry height="50" width="180" x="380" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="agent-box" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;fontStyle=1" value="Agent Core" vertex="1">
+          <mxGeometry height="240" width="520" x="700" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="client" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=0" value="ClaudeSDKClient&#xa;(Multi-turn with Memory)" vertex="1">
+          <mxGeometry height="60" width="180" x="730" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="system-prompt" parent="1" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=0" value="SYSTEM_PROMPT&#xa;Investment Analyst Persona" vertex="1">
+          <mxGeometry height="60" width="180" x="950" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="mcp-server" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=0" value="MCP Server&#xa;(research-tools)" vertex="1">
+          <mxGeometry height="50" width="180" x="380" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="options" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=0" value="ClaudeAgentOptions&#xa;max_turns, tools, prompts" vertex="1">
+          <mxGeometry height="50" width="180" x="950" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="tools-box" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1" value="Tools" vertex="1">
+          <mxGeometry height="110" width="390" x="360" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="report-tool" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=0" value="@tool&#xa;generate_report" vertex="1">
+          <mxGeometry height="50" width="140" x="400" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="future-tools" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;fontStyle=0" value="Future Tools&#xa;(extensible)" vertex="1">
+          <mxGeometry height="50" width="140" x="570" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="outputs-box" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;container=0;" value="Outputs" vertex="1">
+          <mxGeometry height="150" width="460" x="360" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;" target="cli">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" edge="1" parent="1" source="cli" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;" target="client">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="470" y="320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c3" edge="1" parent="1" source="system-prompt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;" target="client">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" edge="1" parent="1" source="options" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;" target="client">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" edge="1" parent="1" source="client" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;" target="mcp-server">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="470" y="350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c6" edge="1" parent="1" source="mcp-server" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="report-tool">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="470" y="470" />
+              <mxPoint x="470" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c7" edge="1" parent="1" source="report-tool" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;" target="docx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" edge="1" parent="1" source="client" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;" target="console">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="780" y="630" />
+              <mxPoint x="740" y="630" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="docx" parent="1" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=0;container=0;" value=".docx&#xa;Reports" vertex="1">
+          <mxGeometry height="40" width="100" x="420" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="console" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=0;container=0;" value="Console&#xa;Response" vertex="1">
+          <mxGeometry height="40" width="100" x="690" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="drawio" parent="1" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;fontStyle=0;container=0;" value=".drawio&#xa;Diagrams" vertex="1">
+          <mxGeometry height="40" width="100" x="560" y="720" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

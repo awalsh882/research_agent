@@ -1,0 +1,5 @@
+claude-agent-sdk
+python-docx>=0.8.11
+fastapi>=0.100.0
+uvicorn>=0.20.0
+websockets>=10.0
