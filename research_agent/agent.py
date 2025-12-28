@@ -127,11 +127,15 @@ def _create_mcp_server():
     )
 
 
-def get_agent_options() -> ClaudeAgentOptions:
-    """Get the agent options with MCP server configured."""
+def get_agent_options(model: str | None = None) -> ClaudeAgentOptions:
+    """Get the agent options with MCP server configured.
+
+    Args:
+        model: Optional model override. If not provided, uses config default.
+    """
     server_name = config.agent.mcp_server_name
     return ClaudeAgentOptions(
-        model=config.agent.model,
+        model=model or config.agent.model,
         system_prompt=get_system_prompt(),
         max_turns=config.agent.max_turns,
         mcp_servers={server_name: _create_mcp_server()},

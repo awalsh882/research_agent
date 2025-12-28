@@ -92,6 +92,44 @@ HTML_TEMPLATE = """
             color: #888;
         }
 
+        /* Model selector */
+        .model-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .model-selector label {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .model-selector select {
+            background: #0f3460;
+            color: #eee;
+            border: 1px solid #1e3a5f;
+            border-radius: 6px;
+            padding: 0.4rem 0.6rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            outline: none;
+            min-width: 180px;
+        }
+
+        .model-selector select:hover {
+            border-color: #e94560;
+        }
+
+        .model-selector select:focus {
+            border-color: #e94560;
+            box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.2);
+        }
+
+        .model-selector select option {
+            background: #16213e;
+            color: #eee;
+        }
+
         /* Split pane layout */
         .split-container {
             flex: 1;
@@ -689,6 +727,15 @@ HTML_TEMPLATE = """
             <h1>Investment Research Agent</h1>
             <p>Conversational research assistant for institutional investors</p>
         </div>
+        <div class="model-selector">
+            <label for="model-select">Model:</label>
+            <select id="model-select" onchange="changeModel(this.value)">
+                <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+                <option value="claude-opus-4-20250514">Claude Opus 4</option>
+                <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+            </select>
+        </div>
         <div class="hint">
             Type <code>/</code> for commands
         </div>
@@ -783,6 +830,7 @@ HTML_TEMPLATE = """
         let isProcessing = false;
         let messageQueue = [];
         let selectedCommandIndex = 0;
+        let currentModel = 'claude-sonnet-4-20250514';
 
         // Slash commands definition
         const COMMANDS = [
@@ -1120,6 +1168,52 @@ HTML_TEMPLATE = """
                     msgEl.textContent = `Unknown command: ${cmd}. Type /help for available commands.`;
                     container.appendChild(msgEl);
             }
+        }
+
+        function changeModel(model) {
+            if (isProcessing) {
+                // Revert selection if processing
+                document.getElementById('model-select').value = currentModel;
+                const container = document.getElementById('chat-container');
+                const msgEl = document.createElement('div');
+                msgEl.className = 'message system';
+                msgEl.textContent = 'Cannot change model while processing. Stop the current generation first.';
+                container.appendChild(msgEl);
+                return;
+            }
+
+            currentModel = model;
+
+            // Send model change to server - this will reset the session
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'set_model',
+                    model: model
+                }));
+
+                // Clear session state since we need a new client with the new model
+                sessionId = null;
+                totalCost = 0;
+                messageQueue = [];
+                updateQueueStatus();
+
+                const container = document.getElementById('chat-container');
+                const msgEl = document.createElement('div');
+                msgEl.className = 'message system';
+                msgEl.textContent = `Model changed to ${getModelDisplayName(model)}. Starting new session.`;
+                container.appendChild(msgEl);
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function getModelDisplayName(model) {
+            const names = {
+                'claude-sonnet-4-20250514': 'Claude Sonnet 4',
+                'claude-opus-4-20250514': 'Claude Opus 4',
+                'claude-3-5-sonnet-20241022': 'Claude 3.5 Sonnet',
+                'claude-3-5-haiku-20241022': 'Claude 3.5 Haiku'
+            };
+            return names[model] || model;
         }
 
         // Command menu functions
@@ -1595,6 +1689,7 @@ async def websocket_endpoint(websocket: WebSocket):
     session_id = None
     client = None
     response_task = None
+    selected_model = "claude-sonnet-4-20250514"  # Default model
 
     async def process_response():
         """Process agent response in a separate task for interrupt support."""
@@ -1676,6 +1771,21 @@ async def websocket_endpoint(websocket: WebSocket):
                         pass
                 continue
 
+            if data.get("type") == "set_model":
+                # Change the model - requires closing current client
+                new_model = data.get("model", "claude-sonnet-4-20250514")
+                selected_model = new_model
+
+                # Close existing client if any
+                if client:
+                    try:
+                        await client.__aexit__(None, None, None)
+                    except Exception:
+                        pass
+                    client = None
+                    session_id = None
+                continue
+
             if data.get("type") == "query":
                 query = data.get("query", "")
 
@@ -1686,11 +1796,15 @@ async def websocket_endpoint(websocket: WebSocket):
                 try:
                     # Create or reuse client
                     if client is None:
-                        options = get_agent_options()
+                        options = get_agent_options(model=selected_model)
                         client = ClaudeSDKClient(options=options)
                         await client.__aenter__()
                         session_id = id(client)
-                        await websocket.send_json({"type": "session_id", "session_id": str(session_id)})
+                        await websocket.send_json({
+                            "type": "session_id",
+                            "session_id": str(session_id),
+                            "model": selected_model
+                        })
 
                     # Send query
                     await client.query(query)
