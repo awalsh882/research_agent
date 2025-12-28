@@ -1,0 +1,197 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36" version="29.2.9">
+  <diagram name="Architecture" id="diagram-1">
+    <mxGraphModel dx="1235" dy="641" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=18;fontStyle=1" value="Claude Agent SDK Python - Architecture" vertex="1">
+          <mxGeometry height="40" width="400" x="80" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="user" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1" value="User / Application" vertex="1">
+          <mxGeometry height="50" width="100" x="315" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="api-layer" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;fontStyle=1;container=0;" value="Public API" vertex="1">
+          <mxGeometry height="190" width="510" x="110" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="internal-layer" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=25;fillColor=#f5f5f5;strokeColor=#666666;fontSize=14;fontStyle=1" value="_internal/" vertex="1">
+          <mxGeometry height="200" width="520" x="110" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="internal-client" parent="internal-layer" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11" value="InternalClient&#xa;process_query()" vertex="1">
+          <mxGeometry height="50" width="130" x="30" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="internal-query" parent="internal-layer" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10" value="Query&#xa;Control protocol&#xa;Hooks &amp; MCP handling" vertex="1">
+          <mxGeometry height="60" width="140" x="190" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="message-parser" parent="internal-layer" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10" value="MessageParser&#xa;JSON parsing&#xa;Type conversion" vertex="1">
+          <mxGeometry height="60" width="130" x="360" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subprocess-transport" parent="internal-layer" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10" value="SubprocessCLITransport&#xa;Process management&#xa;stdin/stdout streams" vertex="1">
+          <mxGeometry height="60" width="160" x="180" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="external-layer" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;fontStyle=1" value="External Dependencies" vertex="1">
+          <mxGeometry height="200" width="390" x="670" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="szw7CwZVLpu8wmCYNc_P-9" edge="1" parent="external-layer" source="claude-cli" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.505;entryY=0.057;entryDx=0;entryDy=0;entryPerimeter=0;flowAnimation=1;" target="anthropic-api" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="claude-cli" parent="external-layer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1" value="Claude Code CLI&#xa;(bundled or system)" vertex="1">
+          <mxGeometry height="45" width="150" x="20" y="37.5" as="geometry" />
+        </mxCell>
+        <mxCell id="mcp-lib" parent="external-layer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11" value="mcp library&#xa;Server, Tool, Types" vertex="1">
+          <mxGeometry height="45" width="130" x="210" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="anyio" parent="external-layer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11" value="anyio&#xa;Async I/O" vertex="1">
+          <mxGeometry height="45" width="130" x="210" y="107.5" as="geometry" />
+        </mxCell>
+        <mxCell id="anthropic-api" parent="external-layer" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11" value="Anthropic API&#xa;(via CLI)" vertex="1">
+          <mxGeometry height="60" width="150" x="20" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="research-layer" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=25;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1;dashed=1;container=0;" value="Example: research_agent/" vertex="1">
+          <mxGeometry height="220" width="450" x="750" y="295" as="geometry" />
+        </mxCell>
+        <mxCell id="agent-py" parent="research-layer" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;container=0;" value="agent.py&#xa;CLI interface&#xa;System prompt" vertex="1">
+          <mxGeometry height="55" width="110" x="165" y="142.5" as="geometry" />
+        </mxCell>
+        <mxCell id="outputs" parent="1" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;container=0;" value="outputs/*.docx&#xa;Research Reports" vertex="1">
+          <mxGeometry height="50" width="120" x="1065" y="555" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-user-query" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;" target="api-layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-query-internal" edge="1" parent="1" source="query-func" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;" target="internal-client">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="205" y="580" />
+              <mxPoint x="205" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-client-query" edge="1" parent="1" source="sdk-client" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;" target="internal-query">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="520" />
+              <mxPoint x="370" y="520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-internal-query" edge="1" parent="1" source="internal-client" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;dashed=1;dashPattern=8 8;flowAnimation=1;" target="internal-query">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-query-transport" edge="1" parent="1" source="internal-query" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;flowAnimation=1;" target="subprocess-transport">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="660" />
+              <mxPoint x="370" y="660" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-query-parser" edge="1" parent="1" source="internal-query" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;dashed=1;dashPattern=8 8;flowAnimation=1;" target="message-parser">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-mcp-lib" edge="1" parent="1" source="mcp-tools" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;dashed=1;dashPattern=8 8;flowAnimation=1;" target="mcp-lib">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="525" y="540" />
+              <mxPoint x="670" y="540" />
+              <mxPoint x="670" y="620" />
+              <mxPoint x="945" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-transport-anyio" edge="1" parent="1" source="subprocess-transport" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;dashed=1;dashPattern=8 8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;flowAnimation=1;" target="anyio">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="820" />
+              <mxPoint x="860" y="820" />
+              <mxPoint x="860" y="780" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-research-sdk" edge="1" parent="1" source="agent-py" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#9673a6;exitX=0;exitY=0.5;entryX=1;entryY=0.5;entryDx=0;entryDy=0;flowAnimation=1;" target="sdk-client">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="915" y="465" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-tools-mcp" edge="1" parent="1" source="tools-registry" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#9673a6;entryX=1;entryY=0.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;flowAnimation=1;" target="mcp-tools">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1370" y="378" />
+              <mxPoint x="1370" y="270" />
+              <mxPoint x="660" y="270" />
+              <mxPoint x="660" y="390" />
+            </Array>
+            <mxPoint x="410" y="750" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-tools-outputs" edge="1" parent="1" source="tools-impl" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#82b366;exitX=0.5;exitY=1;entryX=0.5;entryY=0;flowAnimation=1;" target="outputs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-box" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=20;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1" value="Legend" vertex="1">
+          <mxGeometry height="180" width="180" x="1140" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-core" parent="legend-box" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9" value="Core Component" vertex="1">
+          <mxGeometry height="25" width="80" x="10" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-critical" parent="legend-box" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9" value="Critical Path" vertex="1">
+          <mxGeometry height="25" width="75" x="95" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-data" parent="legend-box" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" value="Data/Config" vertex="1">
+          <mxGeometry height="30" width="75" x="10" y="55" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-external" parent="legend-box" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9" value="External" vertex="1">
+          <mxGeometry height="30" width="75" x="95" y="55" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-user" parent="legend-box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9" value="User/App" vertex="1">
+          <mxGeometry height="30" width="75" x="10" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-solid" edge="1" parent="legend-box" style="endArrow=classic;html=1;strokeWidth=2;flowAnimation=1;" value="Data flow">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="10" y="140" as="sourcePoint" />
+            <mxPoint x="80" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-dashed" edge="1" parent="legend-box" style="endArrow=classic;html=1;strokeWidth=2;dashed=1;dashPattern=8 8;flowAnimation=1;" value="Uses/Config">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="10" y="160" as="sourcePoint" />
+            <mxPoint x="80" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="szw7CwZVLpu8wmCYNc_P-8" edge="1" parent="1" source="subprocess-transport" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;flowAnimation=1;" target="claude-cli" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="query-func" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;container=0;" value="query()&#xa;One-shot interactions" vertex="1">
+          <mxGeometry height="50" width="140" x="135" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="sdk-client" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;container=0;" value="ClaudeSDKClient&#xa;Interactive sessions" vertex="1">
+          <mxGeometry height="50" width="140" x="300" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="types" parent="1" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;container=0;" value="types.py&#xa;ClaudeAgentOptions&#xa;Message types" vertex="1">
+          <mxGeometry height="60" width="120" x="300" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="mcp-tools" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;container=0;" value="@tool decorator&#xa;create_sdk_mcp_server()" vertex="1">
+          <mxGeometry height="50" width="150" x="450" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="tools-registry" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;container=0;" value="tools/registry.py&#xa;@registered_tool&#xa;ToolRegistry" vertex="1">
+          <mxGeometry height="55" width="120" x="1220" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="szw7CwZVLpu8wmCYNc_P-6" edge="1" parent="1" source="tools-impl" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;flowAnimation=1;" target="tools-registry" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tools-impl" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;container=0;" value="report_tool.py&#xa;introspection.py&#xa;generate_report, list_tools" vertex="1">
+          <mxGeometry height="55" width="130" x="1060" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="config-py" parent="1" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;container=0;" value="config.py&#xa;Centralized settings" vertex="1">
+          <mxGeometry height="55" width="100" x="780" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="web-py" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;container=0;" value="web.py&#xa;FastAPI + WebSocket&#xa;Split-pane UI" vertex="1">
+          <mxGeometry height="55" width="120" x="910" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-web-agent" edge="1" parent="1" source="web-py" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;dashed=1;dashPattern=8 8;strokeColor=#9673a6;flowAnimation=1;" target="agent-py">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

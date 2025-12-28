@@ -358,14 +358,29 @@ Risk Assessment
 
 **Formatting Note**: All the risk description paragraphs should use JUSTIFIED alignment for professional presentation.
 
-## Output Location
+## Output Location & Formats
 
-Always save final reports to:
-```
-/mnt/user-data/outputs/[CompanyName]_[Ticker]_Analysis.docx
-```
+Reports are generated in **two formats** for flexibility and future OneNote integration:
 
-Example: `/mnt/user-data/outputs/Dropbox_DBX_Analysis.docx`
+### Primary Format: HTML (OneNote-Compatible)
+```
+outputs/[CompanyName]_[Ticker]_Analysis.html
+```
+- Viewable directly in the web UI
+- Uses only OneNote-compatible HTML elements
+- Ready for future Microsoft Graph API integration
+
+### Secondary Format: DOCX (Downloadable)
+```
+outputs/[CompanyName]_[Ticker]_Analysis.docx
+```
+- Professional Word document for offline use
+- Institutional formatting with justified paragraphs
+- Suitable for sharing and printing
+
+Example files:
+- `outputs/Dropbox_DBX_Analysis.html` (view in browser)
+- `outputs/Dropbox_DBX_Analysis.docx` (download)
 
 ## Best Practices
 
@@ -390,10 +405,29 @@ Example: `/mnt/user-data/outputs/Dropbox_DBX_Analysis.docx`
 4. Assess competitive position and growth drivers
 5. Calculate valuation metrics and compare to peers
 6. Develop comprehensive business and valuation analysis
-7. Read docx SKILL.md
-8. Create comprehensive report using docx-js with proper justified alignment for body text
-9. Save to /mnt/user-data/outputs/Microsoft_MSFT_Analysis.docx
-10. Provide download link to user
+7. Call the `generate_report` tool with structured sections
+8. Reports saved in both HTML and DOCX formats
+9. HTML viewable immediately in UI, DOCX available for download
+
+## OneNote Integration Roadmap
+
+The HTML output format is designed for future OneNote integration:
+
+### Supported HTML Elements
+| Element | Usage |
+|---------|-------|
+| `<h1>` - `<h3>` | Section headers |
+| `<p>` | Body paragraphs (with `text-align: justify`) |
+| `<ul>`, `<ol>`, `<li>` | Bullet and numbered lists |
+| `<table>`, `<tr>`, `<td>`, `<th>` | Financial data tables |
+| `<strong>`, `<b>` | Bold text for labels |
+| `<em>`, `<i>` | Italic text for emphasis |
+
+### Elements NOT Used (OneNote incompatible)
+- `<div>`, `<span>` with complex styling
+- Custom JavaScript
+- External CSS files
+- HTML5 semantic elements (`<section>`, `<article>`, etc.)
 
 ## Notes
 
@@ -404,4 +438,4 @@ Example: `/mnt/user-data/outputs/Dropbox_DBX_Analysis.docx`
 - Maintain objective, analytical tone throughout
 - Focus on thorough analysis and balanced assessment
 - Do not provide buy/hold/sell ratings or specific investment recommendations
-- Use justified paragraph alignment for body text to match professional report standards
+- HTML format uses inline styles for viewer display while remaining OneNote-compatible

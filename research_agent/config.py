@@ -2,11 +2,57 @@
 
 All configurable settings in one place. Values can be overridden via
 environment variables where noted.
+
+Environment Variables:
+    Web Search (set one of these for web search capability):
+        TAVILY_API_KEY  - Tavily API key (recommended, https://tavily.com)
+        SERPAPI_API_KEY - SerpAPI key for Google Search
+        BRAVE_API_KEY   - Brave Search API key
 """
 
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+
+
+@dataclass(frozen=True)
+class SearchConfig:
+    """Configuration for web search providers.
+
+    The agent will use the first available provider based on environment variables.
+    Priority order: Tavily > SerpAPI > Brave
+    """
+
+    @property
+    def tavily_api_key(self) -> str | None:
+        """Tavily API key (recommended for research queries)."""
+        return os.environ.get("TAVILY_API_KEY")
+
+    @property
+    def serpapi_api_key(self) -> str | None:
+        """SerpAPI key for Google Search."""
+        return os.environ.get("SERPAPI_API_KEY")
+
+    @property
+    def brave_api_key(self) -> str | None:
+        """Brave Search API key."""
+        return os.environ.get("BRAVE_API_KEY")
+
+    @property
+    def is_configured(self) -> bool:
+        """Check if any search provider is configured."""
+        return bool(self.tavily_api_key or self.serpapi_api_key or self.brave_api_key)
+
+    @property
+    def active_provider(self) -> str | None:
+        """Get the name of the active search provider."""
+        if self.tavily_api_key:
+            return "tavily"
+        if self.serpapi_api_key:
+            return "serpapi"
+        if self.brave_api_key:
+            return "brave"
+        return None
 
 
 @dataclass(frozen=True)
@@ -54,6 +100,7 @@ class Config:
     agent: AgentConfig = field(default_factory=AgentConfig)
     web: WebConfig = field(default_factory=WebConfig)
     paths: PathConfig = field(default_factory=PathConfig)
+    search: SearchConfig = field(default_factory=SearchConfig)
 
 
 # Global config instance

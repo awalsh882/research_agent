@@ -99,9 +99,182 @@ HTML_TEMPLATE = """
             overflow: hidden;
         }
 
-        /* Left pane - Viewer */
+        /* Files pane (left) */
+        .files-pane {
+            width: 220px;
+            min-width: 180px;
+            max-width: 350px;
+            background: #12121f;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #0f3460;
+            transition: width 0.2s, min-width 0.2s;
+        }
+
+        .files-pane.collapsed {
+            width: 40px !important;
+            min-width: 40px !important;
+        }
+
+        .files-header {
+            padding: 0.75rem 0.75rem;
+            background: #16213e;
+            border-bottom: 1px solid #0f3460;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .files-header h2 {
+            font-size: 0.9rem;
+            color: #888;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .files-pane.collapsed .files-header h2 {
+            display: none;
+        }
+
+        .collapse-btn {
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .collapse-btn:hover {
+            background: #0f3460;
+            color: #eee;
+        }
+
+        .collapse-btn svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.2s;
+        }
+
+        .files-pane.collapsed .collapse-btn svg {
+            transform: rotate(180deg);
+        }
+
+        .files-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .files-pane.collapsed .files-content {
+            display: none;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .file-item:hover {
+            background: #1e2a4a;
+        }
+
+        .file-item.selected {
+            background: #0f3460;
+            color: #eee;
+        }
+
+        .file-item svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            opacity: 0.7;
+        }
+
+        .file-item .file-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-item .file-ext {
+            font-size: 0.65rem;
+            color: #666;
+            text-transform: uppercase;
+            padding: 0.1rem 0.3rem;
+            background: #1a1a2e;
+            border-radius: 3px;
+        }
+
+        .files-empty {
+            color: #444;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .files-refresh {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            padding: 0.25rem;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .files-refresh:hover {
+            border-color: #555;
+            color: #888;
+        }
+
+        .files-refresh svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .files-pane.collapsed .files-refresh {
+            display: none;
+        }
+
+        /* Resizer for files pane */
+        .resizer-files {
+            width: 6px;
+            background: #0f3460;
+            cursor: col-resize;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .resizer-files:hover,
+        .resizer-files.dragging {
+            background: #e94560;
+        }
+
+        .files-pane.collapsed + .resizer-files {
+            display: none;
+        }
+
+        /* Middle pane - Viewer */
         .viewer-pane {
-            width: 50%;
+            flex: 1;
             min-width: 300px;
             background: #12121f;
             display: flex;
@@ -522,7 +695,33 @@ HTML_TEMPLATE = """
     </header>
 
     <div class="split-container">
-        <!-- Left: Viewer Pane -->
+        <!-- Left: Files Pane -->
+        <div class="files-pane" id="files-pane">
+            <div class="files-header">
+                <h2>Files</h2>
+                <div style="display: flex; gap: 0.25rem; align-items: center;">
+                    <button class="files-refresh" onclick="refreshFiles()" title="Refresh">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                        </svg>
+                    </button>
+                    <button class="collapse-btn" onclick="toggleFilesPane()" title="Toggle panel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 18l-6-6 6-6"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="files-content" id="files-content">
+                <div class="files-empty">Loading files...</div>
+            </div>
+        </div>
+
+        <!-- Resizer for files pane -->
+        <div class="resizer-files" id="resizer-files"></div>
+
+        <!-- Middle: Viewer Pane -->
         <div class="viewer-pane" id="viewer-pane">
             <div class="viewer-header">
                 <h2>Viewer</h2>
@@ -1027,7 +1226,7 @@ HTML_TEMPLATE = """
             }
         });
 
-        // Resizer functionality
+        // Resizer functionality (viewer pane)
         const resizer = document.getElementById('resizer');
         const viewerPane = document.getElementById('viewer-pane');
         let isResizing = false;
@@ -1039,28 +1238,6 @@ HTML_TEMPLATE = """
             document.body.style.userSelect = 'none';
         });
 
-        document.addEventListener('mousemove', (e) => {
-            if (!isResizing) return;
-
-            const containerRect = document.querySelector('.split-container').getBoundingClientRect();
-            const newWidth = e.clientX - containerRect.left;
-            const minWidth = 300;
-            const maxWidth = containerRect.width - 350 - 6; // 350 min chat, 6 resizer
-
-            if (newWidth >= minWidth && newWidth <= maxWidth) {
-                viewerPane.style.width = newWidth + 'px';
-            }
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (isResizing) {
-                isResizing = false;
-                resizer.classList.remove('dragging');
-                document.body.style.cursor = '';
-                document.body.style.userSelect = '';
-            }
-        });
-
         // Viewer tab functionality
         document.querySelectorAll('.viewer-tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -1070,8 +1247,288 @@ HTML_TEMPLATE = """
             });
         });
 
+        // Files pane functionality
+        let selectedFile = null;
+
+        function toggleFilesPane() {
+            const pane = document.getElementById('files-pane');
+            pane.classList.toggle('collapsed');
+        }
+
+        async function refreshFiles() {
+            try {
+                const response = await fetch('/api/files');
+                const files = await response.json();
+                renderFileList(files);
+            } catch (err) {
+                console.error('Failed to load files:', err);
+                document.getElementById('files-content').innerHTML =
+                    '<div class="files-empty">Failed to load files</div>';
+            }
+        }
+
+        function renderFileList(files) {
+            const container = document.getElementById('files-content');
+
+            if (!files || files.length === 0) {
+                container.innerHTML = '<div class="files-empty">No files in outputs/</div>';
+                return;
+            }
+
+            container.innerHTML = files.map(file => {
+                const ext = file.name.split('.').pop() || '';
+                const icon = getFileIcon(ext);
+                const isSelected = selectedFile === file.name;
+                return `
+                    <div class="file-item ${isSelected ? 'selected' : ''}"
+                         onclick="selectFile('${file.name}')"
+                         title="${file.name}">
+                        ${icon}
+                        <span class="file-name">${file.name}</span>
+                        <span class="file-ext">${ext}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getFileIcon(ext) {
+            const icons = {
+                docx: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6"/>
+                    <path d="M16 13H8"/>
+                    <path d="M16 17H8"/>
+                    <path d="M10 9H8"/>
+                </svg>`,
+                pdf: `<svg viewBox="0 0 24 24" fill="none" stroke="#e94560" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6"/>
+                </svg>`,
+                png: `<svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <path d="M21 15l-5-5L5 21"/>
+                </svg>`,
+                jpg: `<svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <path d="M21 15l-5-5L5 21"/>
+                </svg>`,
+                drawio: `<svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                </svg>`,
+                json: `<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6"/>
+                </svg>`,
+                csv: `<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6"/>
+                    <path d="M8 13h2"/>
+                    <path d="M8 17h2"/>
+                    <path d="M14 13h2"/>
+                    <path d="M14 17h2"/>
+                </svg>`,
+                html: `<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6"/>
+                    <path d="M8 13l2 2-2 2"/>
+                    <path d="M16 13l-2 2 2 2"/>
+                </svg>`,
+                htm: `<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6"/>
+                    <path d="M8 13l2 2-2 2"/>
+                    <path d="M16 13l-2 2 2 2"/>
+                </svg>`
+            };
+            return icons[ext.toLowerCase()] || `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <path d="M14 2v6h6"/>
+            </svg>`;
+        }
+
+        function selectFile(filename) {
+            selectedFile = filename;
+
+            // Update selection UI
+            document.querySelectorAll('.file-item').forEach(el => {
+                el.classList.remove('selected');
+                if (el.getAttribute('title') === filename) {
+                    el.classList.add('selected');
+                }
+            });
+
+            // Load file into viewer
+            loadFileInViewer(filename);
+        }
+
+        function loadFileInViewer(filename) {
+            const viewer = document.getElementById('viewer-content');
+            const ext = filename.split('.').pop().toLowerCase();
+
+            if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'gif' || ext === 'svg') {
+                viewer.innerHTML = `
+                    <div style="height: 100%; display: flex; align-items: center; justify-content: center; padding: 1rem;">
+                        <img src="/outputs/${filename}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;" />
+                    </div>
+                `;
+            } else if (ext === 'pdf') {
+                viewer.innerHTML = `
+                    <iframe src="/outputs/${filename}" style="width: 100%; height: 100%; border: none;"></iframe>
+                `;
+            } else if (ext === 'html' || ext === 'htm') {
+                // HTML files are displayed in an iframe for full rendering
+                viewer.innerHTML = `
+                    <iframe src="/outputs/${filename}" style="width: 100%; height: 100%; border: none; background: white;"></iframe>
+                `;
+            } else if (ext === 'docx') {
+                // Check if there's a corresponding HTML file for preview
+                const htmlFilename = filename.replace(/\.docx$/i, '.html');
+                fetch(`/outputs/${htmlFilename}`, { method: 'HEAD' })
+                    .then(res => {
+                        if (res.ok) {
+                            // HTML version exists, show it with download option for DOCX
+                            viewer.innerHTML = `
+                                <div style="height: 100%; display: flex; flex-direction: column;">
+                                    <div style="padding: 0.5rem 1rem; background: #2a2a2a; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #aaa; font-size: 0.85rem;">Viewing HTML version</span>
+                                        <a href="/outputs/${filename}" download style="color: #e94560; text-decoration: none; font-size: 0.85rem;">
+                                            Download DOCX →
+                                        </a>
+                                    </div>
+                                    <iframe src="/outputs/${htmlFilename}" style="flex: 1; width: 100%; border: none; background: white;"></iframe>
+                                </div>
+                            `;
+                        } else {
+                            // No HTML version, show download link only
+                            viewer.innerHTML = `
+                                <div class="viewer-placeholder">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 48px; height: 48px;">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <path d="M14 2v6h6"/>
+                                        <path d="M16 13H8"/>
+                                        <path d="M16 17H8"/>
+                                    </svg>
+                                    <p style="margin-top: 1rem;"><strong>${filename}</strong></p>
+                                    <p style="margin-top: 0.5rem; color: #666;">Word documents cannot be previewed in browser.</p>
+                                    <a href="/outputs/${filename}" download style="margin-top: 1rem; color: #e94560; text-decoration: none;">
+                                        Download file →
+                                    </a>
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(() => {
+                        // Error checking for HTML, show download link
+                        viewer.innerHTML = `
+                            <div class="viewer-placeholder">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 48px; height: 48px;">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <path d="M14 2v6h6"/>
+                                    <path d="M16 13H8"/>
+                                    <path d="M16 17H8"/>
+                                </svg>
+                                <p style="margin-top: 1rem;"><strong>${filename}</strong></p>
+                                <p style="margin-top: 0.5rem; color: #666;">Word documents cannot be previewed in browser.</p>
+                                <a href="/outputs/${filename}" download style="margin-top: 1rem; color: #e94560; text-decoration: none;">
+                                    Download file →
+                                </a>
+                            </div>
+                        `;
+                    });
+            } else if (ext === 'json' || ext === 'csv' || ext === 'txt' || ext === 'md') {
+                fetch(`/outputs/${filename}`)
+                    .then(res => res.text())
+                    .then(content => {
+                        viewer.innerHTML = `
+                            <pre style="padding: 1rem; margin: 0; overflow: auto; height: 100%; font-size: 0.85rem; line-height: 1.5; color: #ccc; background: transparent;">${escapeHtml(content)}</pre>
+                        `;
+                    })
+                    .catch(() => {
+                        viewer.innerHTML = `<div class="viewer-placeholder"><p>Failed to load file</p></div>`;
+                    });
+            } else {
+                viewer.innerHTML = `
+                    <div class="viewer-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 48px; height: 48px;">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <path d="M14 2v6h6"/>
+                        </svg>
+                        <p style="margin-top: 1rem;"><strong>${filename}</strong></p>
+                        <p style="margin-top: 0.5rem; color: #666;">Preview not available for this file type.</p>
+                        <a href="/outputs/${filename}" download style="margin-top: 1rem; color: #e94560; text-decoration: none;">
+                            Download file →
+                        </a>
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // Resizer for files pane
+        const resizerFiles = document.getElementById('resizer-files');
+        const filesPane = document.getElementById('files-pane');
+        let isResizingFiles = false;
+
+        resizerFiles.addEventListener('mousedown', (e) => {
+            isResizingFiles = true;
+            resizerFiles.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isResizingFiles) {
+                const containerRect = document.querySelector('.split-container').getBoundingClientRect();
+                const newWidth = e.clientX - containerRect.left;
+                const minWidth = 180;
+                const maxWidth = 350;
+
+                if (newWidth >= minWidth && newWidth <= maxWidth) {
+                    filesPane.style.width = newWidth + 'px';
+                }
+            }
+
+            if (!isResizing) return;
+
+            const containerRect = document.querySelector('.split-container').getBoundingClientRect();
+            const filesWidth = filesPane.classList.contains('collapsed') ? 40 : filesPane.offsetWidth;
+            const newWidth = e.clientX - containerRect.left - filesWidth - 12; // 12 = resizers
+            const minWidth = 300;
+            const maxWidth = containerRect.width - filesWidth - 350 - 12;
+
+            if (newWidth >= minWidth && newWidth <= maxWidth) {
+                viewerPane.style.width = newWidth + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizingFiles) {
+                isResizingFiles = false;
+                resizerFiles.classList.remove('dragging');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+            if (isResizing) {
+                isResizing = false;
+                resizer.classList.remove('dragging');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+
         // Connect on load
         connect();
+
+        // Load files on startup
+        refreshFiles();
     </script>
 </body>
 </html>
@@ -1096,6 +1553,28 @@ async def get_favicon():
 async def get_home():
     """Serve the main HTML page."""
     return HTML_TEMPLATE
+
+
+@app.get("/api/files")
+async def list_output_files():
+    """List all files in the outputs directory."""
+    outputs_dir = Path(__file__).parent.parent / "outputs"
+    if not outputs_dir.exists():
+        return []
+
+    files = []
+    for file_path in sorted(outputs_dir.iterdir()):
+        if file_path.is_file() and not file_path.name.startswith("."):
+            stat = file_path.stat()
+            files.append({
+                "name": file_path.name,
+                "size": stat.st_size,
+                "modified": stat.st_mtime,
+            })
+
+    # Sort by modification time, newest first
+    files.sort(key=lambda x: x["modified"], reverse=True)
+    return files
 
 
 @app.get("/outputs/{filename}")

@@ -6,11 +6,11 @@ A conversational research agent with memory, powered by the Claude Agent SDK. Pr
 
 - **Multi-turn conversations** - Agent remembers context across the session
 - **Structured analysis** - Responses formatted for institutional investors
-- **Report generation** - Export research to professional Word documents
+- **Web search** - Real-time access to current news, earnings, and market data
+- **Report generation** - Export research to HTML and Word documents
 - **Web interface** - Split-pane UI with chat and viewer panels
 - **Slash commands** - Quick actions via `/clear`, `/new`, `/stop`, `/help`
 - **Tool introspection** - Agent can report its own capabilities
-- **Architecture visualization** - Developer tool to inspect agent structure
 
 ## Getting Started
 
@@ -35,6 +35,18 @@ A conversational research agent with memory, powered by the Claude Agent SDK. Pr
 3. Set your API key:
    ```bash
    export ANTHROPIC_API_KEY="your-api-key"
+   ```
+
+4. (Optional) Enable web search with one of these providers:
+   ```bash
+   # Tavily (recommended for research - https://tavily.com)
+   export TAVILY_API_KEY="your-tavily-key"
+
+   # Or SerpAPI (Google Search)
+   export SERPAPI_API_KEY="your-serpapi-key"
+
+   # Or Brave Search
+   export BRAVE_API_KEY="your-brave-key"
    ```
 
 ### Running the Agent
@@ -107,10 +119,13 @@ The agent has access to:
 
 | Tool | Description |
 |------|-------------|
-| `generate_report` | Creates a professional equity research report as a Word document (.docx) |
+| `web_search` | Search the web for current news, earnings, analyst opinions, and market data |
+| `generate_report` | Creates a professional equity research report in HTML and Word formats |
 | `list_tools` | Returns a list of available tools and their capabilities |
 
-Ask the agent to "generate a report" after completing an analysis to save it as a formal document. Ask "what tools do you have?" to see available capabilities.
+- Ask the agent to "search for DocuSign Q3 earnings" to get real-time information
+- Ask "generate a report" after completing an analysis to save it as a document
+- Ask "what tools do you have?" to see available capabilities
 
 ## Project Structure
 
@@ -120,27 +135,20 @@ research_agent/
 ├── agent.py             # Main agent with ClaudeSDKClient
 ├── config.py            # Centralized configuration
 ├── web.py               # FastAPI web interface with split-pane UI
-├── architecture.py      # Developer tool for architecture diagrams
 └── tools/
     ├── __init__.py
     ├── registry.py      # Self-registering tool system
-    ├── report_tool.py   # Report generation tool
+    ├── web_search.py    # Web search tool (Tavily/SerpAPI/Brave)
+    ├── report_tool.py   # Report generation (HTML + DOCX)
+    ├── report_html.py   # HTML template for OneNote-compatible output
     └── introspection.py # Tool introspection (list_tools)
 
 outputs/                 # Generated files
-├── *.docx               # Research reports
-└── agent_architecture.drawio
+├── *.html               # Research reports (viewable in browser)
+└── *.docx               # Research reports (downloadable)
 
 docs/                    # Claude Agent SDK documentation
 ```
-
-## Developer Tools
-
-**Generate architecture diagram:**
-```bash
-python -m research_agent.architecture
-```
-Creates a draw.io diagram visualizing the agent's components, tools, and data flow.
 
 ## Customization
 
@@ -151,6 +159,7 @@ Edit `research_agent/config.py` to modify:
 - **`AgentConfig`** - Model, max_turns, MCP server settings
 - **`WebConfig`** - Host, port, log level for web UI
 - **`PathConfig`** - Output directories
+- **`SearchConfig`** - Web search provider configuration (via environment variables)
 
 ### Adding New Tools
 

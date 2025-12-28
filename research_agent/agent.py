@@ -35,6 +35,7 @@ from research_agent.config import config
 from research_agent.tools.registry import ToolRegistry
 
 # Import tools to trigger registration (order matters - report_tool before introspection)
+import research_agent.tools.web_search  # noqa: F401
 import research_agent.tools.report_tool  # noqa: F401
 import research_agent.tools.introspection  # noqa: F401
 
@@ -71,6 +72,8 @@ Guidelines:
 - Reference relevant market dynamics, valuation frameworks, and industry metrics
 - Focus on actionable insights rather than generic observations
 - When asked to compare or contrast, be specific about relative positioning
+- Use web_search to find current information like recent earnings, news, analyst opinions, and market data
+- Always cite sources when using information from web search results
 
 IMPORTANT: When you call list_tools, report ONLY the tools returned by that tool. Do not add or embellish with other capabilities.
 

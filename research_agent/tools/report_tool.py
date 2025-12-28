@@ -1,7 +1,8 @@
 """Report generation tool for the Investment Research Agent.
 
-This tool generates professional equity research reports in Word format (.docx)
-following institutional formatting standards.
+This tool generates professional equity research reports in both Word (.docx)
+and HTML formats. The HTML format uses OneNote-compatible elements for future
+integration compatibility.
 """
 
 import json
@@ -10,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from research_agent.tools.registry import registered_tool
+from research_agent.tools.report_html import create_html_report
 
 # Lazy import to avoid dependency issues if python-docx not installed
 docx = None
@@ -36,7 +38,7 @@ def _get_outputs_dir() -> Path:
     return get_outputs_dir()
 
 
-def _create_report(
+def _create_docx_report(
     company_name: str,
     ticker: str,
     sections: dict[str, Any],
@@ -56,7 +58,7 @@ def _create_report(
             - key_takeaways: list[str]
 
     Returns:
-        Path to the generated report file.
+        Path to the generated DOCX file.
     """
     _ensure_docx()
     from docx.shared import Pt, Inches
@@ -153,8 +155,9 @@ def _create_report(
 @registered_tool(
     name="generate_report",
     description=(
-        "Generate a professional equity research report as a Word document (.docx). "
-        "Use this after analyzing a company to create a formal report the user can download."
+        "Generate a professional equity research report in both Word (.docx) and HTML formats. "
+        "The HTML format is OneNote-compatible for future integration. "
+        "Use this after analyzing a company to create a formal report the user can view and download."
     ),
     parameters={
         "company_name": "The company name (e.g., 'DocuSign')",
@@ -171,7 +174,7 @@ def _create_report(
     },
 )
 async def generate_report(args: dict[str, Any]) -> dict[str, Any]:
-    """Generate an equity research report.
+    """Generate an equity research report in HTML and DOCX formats.
 
     Args:
         args: Dict with:
@@ -189,7 +192,7 @@ async def generate_report(args: dict[str, Any]) -> dict[str, Any]:
                 }
 
     Returns:
-        Tool result with success/failure message.
+        Tool result with success/failure message and paths to both files.
     """
     try:
         company_name = args.get("company_name", "")
@@ -217,24 +220,41 @@ async def generate_report(args: dict[str, Any]) -> dict[str, Any]:
                 "is_error": True,
             }
 
-        # Generate the report
-        output_path = _create_report(company_name, ticker, sections)
+        # Generate HTML report (always available)
+        html_path = create_html_report(company_name, ticker, sections)
 
-        return {
-            "content": [{
-                "type": "text",
-                "text": f"Report generated successfully!\n\nSaved to: {output_path}"
-            }]
-        }
+        # Try to generate DOCX report (may fail if python-docx not installed)
+        docx_path = None
+        docx_error = None
+        try:
+            docx_path = _create_docx_report(company_name, ticker, sections)
+        except ImportError as e:
+            docx_error = str(e)
 
-    except ImportError as e:
-        return {
-            "content": [{
-                "type": "text",
-                "text": str(e)
-            }],
-            "is_error": True,
-        }
+        # Build response message
+        if docx_path:
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": (
+                        f"Reports generated successfully!\n\n"
+                        f"HTML (viewable): {html_path}\n"
+                        f"DOCX (downloadable): {docx_path}"
+                    )
+                }]
+            }
+        else:
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": (
+                        f"HTML report generated successfully!\n\n"
+                        f"Saved to: {html_path}\n\n"
+                        f"Note: DOCX generation skipped - {docx_error}"
+                    )
+                }]
+            }
+
     except Exception as e:
         return {
             "content": [{
