@@ -34,11 +34,8 @@ from claude_agent_sdk import (
 from research_agent.config import config
 from research_agent.tools.registry import ToolRegistry
 
-# Import tools to trigger registration (order matters - report_tool before introspection)
-import research_agent.tools.web_search  # noqa: F401
-import research_agent.tools.report_tool  # noqa: F401
-import research_agent.tools.task_tool  # noqa: F401
-import research_agent.tools.introspection  # noqa: F401
+# Explicitly register all tools (preferred over import side-effects)
+ToolRegistry.register_all()
 
 
 # Base system prompt without tools section (tools are added dynamically)

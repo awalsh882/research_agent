@@ -47,10 +47,19 @@ class ToolRegistry:
     - Tool functions (for create_sdk_mcp_server)
     - Tool metadata (for introspection)
     - System prompt generation (for SYSTEM_PROMPT)
+
+    Usage:
+        # Option 1: Use @registered_tool decorator (auto-registers on import)
+        @registered_tool(name="my_tool", ...)
+        async def my_tool(...): ...
+
+        # Option 2: Explicit registration (preferred for testability)
+        ToolRegistry.register_all()  # Registers all known tools
     """
 
     _tools: dict[str, Callable[..., Awaitable[dict[str, Any]]]] = {}
     _metadata: dict[str, ToolMetadata] = {}
+    _initialized: bool = False
 
     @classmethod
     def register(
@@ -161,6 +170,33 @@ class ToolRegistry:
         """Clear all registered tools. Useful for testing."""
         cls._tools.clear()
         cls._metadata.clear()
+        cls._initialized = False
+
+    @classmethod
+    def register_all(cls) -> None:
+        """Explicitly register all known tools.
+
+        This method provides a single, explicit point where all tools
+        are registered. Prefer this over relying on import side-effects.
+
+        Call this once at application startup (e.g., in agent.py).
+        """
+        if cls._initialized:
+            return
+
+        # Import tool modules to trigger @registered_tool decorators
+        # This is the ONLY place these imports should occur
+        from research_agent.tools import web_search  # noqa: F401
+        from research_agent.tools import report_tool  # noqa: F401
+        from research_agent.tools import task_tool  # noqa: F401
+        from research_agent.tools import introspection  # noqa: F401
+
+        cls._initialized = True
+
+    @classmethod
+    def is_initialized(cls) -> bool:
+        """Check if tools have been registered."""
+        return cls._initialized
 
 
 def registered_tool(
