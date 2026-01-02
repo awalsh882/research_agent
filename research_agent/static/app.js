@@ -878,9 +878,12 @@ function escapeHtml(text) {
 function initResizers() {
     const resizer = document.getElementById('resizer');
     const viewerPane = document.getElementById('viewer-pane');
+    const chatPane = document.querySelector('.chat-pane');
     const resizerFiles = document.getElementById('resizer-files');
     const filesPane = document.getElementById('files-pane');
+    const container = document.querySelector('.split-container');
 
+    // Resizer between viewer and chat panes
     resizer.addEventListener('mousedown', (e) => {
         isResizing = true;
         resizer.classList.add('dragging');
@@ -888,6 +891,7 @@ function initResizers() {
         document.body.style.userSelect = 'none';
     });
 
+    // Resizer between files and viewer panes
     resizerFiles.addEventListener('mousedown', (e) => {
         isResizingFiles = true;
         resizerFiles.classList.add('dragging');
@@ -896,26 +900,54 @@ function initResizers() {
     });
 
     document.addEventListener('mousemove', (e) => {
+        // Handle files pane resizing
         if (isResizingFiles) {
-            const containerRect = document.querySelector('.split-container').getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
             const newWidth = e.clientX - containerRect.left;
             const minWidth = 180;
             const maxWidth = 350;
 
             if (newWidth >= minWidth && newWidth <= maxWidth) {
                 filesPane.style.width = newWidth + 'px';
+                filesPane.style.flex = 'none';
             }
         }
 
+        // Handle viewer/chat pane resizing
         if (isResizing) {
-            const containerRect = document.querySelector('.split-container').getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
             const filesWidth = filesPane.classList.contains('collapsed') ? 40 : filesPane.offsetWidth;
-            const newWidth = e.clientX - containerRect.left - filesWidth - 12;
-            const minWidth = 300;
-            const maxWidth = containerRect.width - filesWidth - 350 - 12;
+            const resizerWidth = 6; // Width of each resizer
+            const availableWidth = containerRect.width - filesWidth - (resizerWidth * 2);
 
-            if (newWidth >= minWidth && newWidth <= maxWidth) {
-                viewerPane.style.width = newWidth + 'px';
+            // Calculate position relative to the start of viewer pane
+            const viewerStart = containerRect.left + filesWidth + resizerWidth;
+            const mouseOffset = e.clientX - viewerStart;
+
+            // Set minimum widths
+            const minViewerWidth = 300;
+            const minChatWidth = 350;
+
+            // Calculate new widths
+            let newViewerWidth = mouseOffset;
+            let newChatWidth = availableWidth - newViewerWidth;
+
+            // Enforce minimums
+            if (newViewerWidth < minViewerWidth) {
+                newViewerWidth = minViewerWidth;
+                newChatWidth = availableWidth - newViewerWidth;
+            }
+            if (newChatWidth < minChatWidth) {
+                newChatWidth = minChatWidth;
+                newViewerWidth = availableWidth - newChatWidth;
+            }
+
+            // Apply widths
+            if (newViewerWidth >= minViewerWidth && newChatWidth >= minChatWidth) {
+                viewerPane.style.flex = 'none';
+                viewerPane.style.width = newViewerWidth + 'px';
+                chatPane.style.flex = 'none';
+                chatPane.style.width = newChatWidth + 'px';
             }
         }
     });
