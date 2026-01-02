@@ -15,23 +15,14 @@ import json
 import logging
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket
 
 # Configure logging
 logger = logging.getLogger(__name__)
 from fastapi.responses import HTMLResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from claude_agent_sdk import (
-    AssistantMessage,
-    ClaudeSDKClient,
-    ResultMessage,
-    TextBlock,
-    ToolUseBlock,
-    ToolResultBlock,
-)
-
-from research_agent.agent import get_agent_options
+from research_agent.websocket_handler import handle_websocket
 
 app = FastAPI(title="Investment Research Agent")
 
@@ -40,8 +31,6 @@ STATIC_DIR = Path(__file__).parent / "static"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-# Store active sessions
-sessions: dict[str, ClaudeSDKClient] = {}
 
 
 HTML_TEMPLATE = """
@@ -2118,167 +2107,8 @@ async def get_task_progress():
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    """Handle WebSocket connections for real-time chat with interrupt support."""
-    await websocket.accept()
-    logger.info("WebSocket connected")
-
-    session_id = None
-    client = None
-    response_task = None
-    selected_model = "claude-sonnet-4-20250514"  # Default model
-
-    async def process_response():
-        """Process agent response in a separate task for interrupt support."""
-        nonlocal client
-        current_text = ""
-        turn_cost = 0.0
-
-        try:
-            async for message in client.receive_response():
-                if isinstance(message, AssistantMessage):
-                    for block in message.content:
-                        if isinstance(block, TextBlock):
-                            current_text = block.text
-                            await websocket.send_json({
-                                "type": "text",
-                                "content": current_text
-                            })
-                        elif isinstance(block, ToolUseBlock):
-                            await websocket.send_json({
-                                "type": "tool_use",
-                                "tool_name": block.name,
-                                "input": block.input
-                            })
-                        elif isinstance(block, ToolResultBlock):
-                            content = ""
-                            if block.content:
-                                for item in block.content:
-                                    if hasattr(item, "text"):
-                                        content += item.text
-                            await websocket.send_json({
-                                "type": "tool_result",
-                                "content": content
-                            })
-
-                elif isinstance(message, ResultMessage):
-                    if message.total_cost_usd:
-                        turn_cost = message.total_cost_usd
-
-            await websocket.send_json({
-                "type": "done",
-                "cost": turn_cost
-            })
-        except asyncio.CancelledError:
-            # Task was cancelled due to interrupt
-            await websocket.send_json({"type": "interrupted"})
-            raise
-
-    try:
-        while True:
-            data = await websocket.receive_json()
-
-            if data.get("type") == "new_session":
-                logger.info("New session requested - destroying client")
-                # Cancel any ongoing response
-                if response_task and not response_task.done():
-                    response_task.cancel()
-                    try:
-                        await response_task
-                    except asyncio.CancelledError:
-                        pass
-
-                # Close existing client if any
-                if client:
-                    await client.__aexit__(None, None, None)
-                session_id = None
-                client = None
-                continue
-
-            if data.get("type") == "interrupt":
-                # Interrupt the current response
-                if client and response_task and not response_task.done():
-                    try:
-                        await client.interrupt()
-                    except Exception:
-                        pass
-                    response_task.cancel()
-                    try:
-                        await response_task
-                    except asyncio.CancelledError:
-                        pass
-                continue
-
-            if data.get("type") == "set_model":
-                # Change the model - requires closing current client
-                new_model = data.get("model", "claude-sonnet-4-20250514")
-                logger.info(f"Model changed to {new_model} - destroying client")
-                selected_model = new_model
-
-                # Close existing client if any
-                if client:
-                    try:
-                        await client.__aexit__(None, None, None)
-                    except Exception:
-                        pass
-                    client = None
-                    session_id = None
-                continue
-
-            if data.get("type") == "query":
-                query = data.get("query", "")
-
-                if not query:
-                    await websocket.send_json({"type": "error", "message": "Empty query"})
-                    continue
-
-                try:
-                    # Create or reuse client
-                    if client is None:
-                        logger.info(f"Creating new client for model {selected_model}")
-                        options = get_agent_options(model=selected_model)
-                        client = ClaudeSDKClient(options=options)
-                        await client.__aenter__()
-                        session_id = id(client)
-                        await websocket.send_json({
-                            "type": "session_id",
-                            "session_id": str(session_id),
-                            "model": selected_model
-                        })
-                    else:
-                        logger.info(f"Reusing existing client (session_id={session_id})")
-
-                    # Send query
-                    await client.query(query)
-
-                    # Process response in a task so we can interrupt it
-                    response_task = asyncio.create_task(process_response())
-                    await response_task
-
-                except asyncio.CancelledError:
-                    # Response was interrupted
-                    pass
-                except Exception as e:
-                    await websocket.send_json({
-                        "type": "error",
-                        "message": str(e)
-                    })
-
-    except WebSocketDisconnect:
-        pass
-    finally:
-        # Cancel any ongoing response
-        if response_task and not response_task.done():
-            response_task.cancel()
-            try:
-                await response_task
-            except asyncio.CancelledError:
-                pass
-
-        if client:
-            try:
-                await client.__aexit__(None, None, None)
-            except Exception:
-                pass
+    """Handle WebSocket connections for real-time chat."""
+    await handle_websocket(websocket)
 
 
 def main():
