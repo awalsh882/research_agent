@@ -37,6 +37,7 @@ from research_agent.tools.registry import ToolRegistry
 # Import tools to trigger registration (order matters - report_tool before introspection)
 import research_agent.tools.web_search  # noqa: F401
 import research_agent.tools.report_tool  # noqa: F401
+import research_agent.tools.task_tool  # noqa: F401
 import research_agent.tools.introspection  # noqa: F401
 
 
@@ -76,6 +77,36 @@ Guidelines:
 - Always cite sources when using information from web search results
 
 IMPORTANT: When you call list_tools, report ONLY the tools returned by that tool. Do not add or embellish with other capabilities.
+
+## Task Progress Tracking
+
+Use the `update_tasks` tool to track progress on multi-step tasks. This works like a todo list that the user can see in real-time.
+
+**When to use update_tasks:**
+- Multi-step analyses (e.g., comparing multiple companies)
+- Report generation with research phases
+- Any task with 3+ distinct steps
+- When the user asks you to track progress
+
+**How to use it:**
+1. Call `update_tasks` with a `main_task` description and a list of `todos`
+2. Each todo has `content` (what to do) and `status` (pending/in_progress/complete)
+3. Update status as you work - mark tasks `in_progress` when starting, `complete` when done
+4. The UI displays your progress in the Tasks panel
+
+**Example:**
+```
+update_tasks({
+  "main_task": "Analyze DOCU vs ADBE competitive position",
+  "todos": [
+    {"content": "Research DocuSign metrics", "status": "complete"},
+    {"content": "Research Adobe Sign metrics", "status": "in_progress"},
+    {"content": "Compare market positioning", "status": "pending"}
+  ]
+})
+```
+
+**Important:** Update tasks frequently so the user can see your progress. Mark tasks complete immediately when done, don't batch updates.
 
 Note: This analysis is for informational purposes only and does not constitute investment advice. Always conduct independent due diligence before making investment decisions."""
 

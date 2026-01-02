@@ -12,9 +12,13 @@ Then open http://localhost:8000 in your browser.
 
 import asyncio
 import json
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+
+# Configure logging
+logger = logging.getLogger(__name__)
 from fastapi.responses import HTMLResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
@@ -92,37 +96,39 @@ HTML_TEMPLATE = """
             color: #888;
         }
 
-        /* Model selector */
+        /* Model selector - positioned below input */
         .model-selector {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: flex-end;
+            gap: 0.4rem;
+            padding-top: 0.5rem;
         }
 
         .model-selector label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #666;
         }
 
         .model-selector select {
-            background: #0f3460;
-            color: #eee;
+            background: transparent;
+            color: #888;
             border: 1px solid #1e3a5f;
-            border-radius: 6px;
-            padding: 0.4rem 0.6rem;
-            font-size: 0.8rem;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.7rem;
             cursor: pointer;
             outline: none;
-            min-width: 180px;
         }
 
         .model-selector select:hover {
-            border-color: #e94560;
+            border-color: #3182ce;
+            color: #aaa;
         }
 
         .model-selector select:focus {
-            border-color: #e94560;
-            box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.2);
+            border-color: #3182ce;
+            color: #ccc;
         }
 
         .model-selector select option {
@@ -264,6 +270,127 @@ HTML_TEMPLATE = """
             font-size: 0.8rem;
             text-align: center;
             padding: 1rem;
+        }
+
+        /* Tasks section in files pane */
+        .tasks-section {
+            border-top: 1px solid #1e3a5f;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+        }
+
+        .tasks-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .tasks-header h3 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0;
+        }
+
+        .tasks-refresh {
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tasks-refresh:hover {
+            background: #0f3460;
+            color: #eee;
+        }
+
+        .tasks-content {
+            padding: 0.25rem 0.5rem;
+        }
+
+        .tasks-empty {
+            color: #444;
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 0.5rem;
+            font-style: italic;
+        }
+
+        .task-main {
+            background: #16213e;
+            border-radius: 6px;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-main-title {
+            font-size: 0.8rem;
+            color: #e2e8f0;
+            margin-bottom: 0.25rem;
+        }
+
+        .task-progress-bar {
+            height: 4px;
+            background: #0f3460;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .task-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+            transition: width 0.3s ease;
+        }
+
+        .task-progress-text {
+            font-size: 0.65rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+
+        .subtask-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.5rem;
+            font-size: 0.75rem;
+            color: #aaa;
+            border-radius: 4px;
+            margin-bottom: 0.15rem;
+        }
+
+        .subtask-item:hover {
+            background: #1e2a4a;
+        }
+
+        .subtask-status {
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .subtask-status.complete { color: #22c55e; }
+        .subtask-status.in_progress { color: #ff9800; }
+        .subtask-status.pending { color: #666; }
+        .subtask-status.blocked { color: #e94560; }
+        .subtask-status.skipped { color: #888; }
+
+        .subtask-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .files-pane.collapsed .tasks-section {
+            display: none;
         }
 
         .files-refresh {
@@ -658,6 +785,61 @@ HTML_TEMPLATE = """
             40% { opacity: 1; }
         }
 
+        /* Agent toast notification */
+        .agent-toast {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f3460 100%);
+            border-bottom: 2px solid #3182ce;
+            padding: 0.75rem 1rem;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 100;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        .agent-toast.visible {
+            display: flex;
+        }
+
+        .agent-toast.complete {
+            background: linear-gradient(135deg, #1a4731 0%, #14532d 100%);
+            border-color: #22c55e;
+        }
+
+        .toast-icon {
+            font-size: 1.1rem;
+        }
+
+        .toast-text {
+            flex: 1;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+
+        .toast-stop {
+            background: #e94560;
+            border: none;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.15s;
+        }
+
+        .toast-stop:hover {
+            background: #ff6b8a;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         #queue-status {
             font-size: 0.75rem;
             color: #ff9800;
@@ -727,15 +909,6 @@ HTML_TEMPLATE = """
             <h1>Investment Research Agent</h1>
             <p>Conversational research assistant for institutional investors</p>
         </div>
-        <div class="model-selector">
-            <label for="model-select">Model:</label>
-            <select id="model-select" onchange="changeModel(this.value)">
-                <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
-                <option value="claude-opus-4-20250514">Claude Opus 4</option>
-                <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
-                <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-            </select>
-        </div>
         <div class="hint">
             Type <code>/</code> for commands
         </div>
@@ -762,6 +935,22 @@ HTML_TEMPLATE = """
             </div>
             <div class="files-content" id="files-content">
                 <div class="files-empty">Loading files...</div>
+            </div>
+
+            <!-- Tasks section -->
+            <div class="tasks-section" id="tasks-section">
+                <div class="tasks-header">
+                    <h3>Tasks</h3>
+                    <button class="tasks-refresh" onclick="refreshTasks()" title="Refresh">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="tasks-content" id="tasks-content">
+                    <div class="tasks-empty">No active tasks</div>
+                </div>
             </div>
         </div>
 
@@ -797,6 +986,11 @@ HTML_TEMPLATE = """
 
         <!-- Right: Chat Pane -->
         <div class="chat-pane">
+            <div class="agent-toast" id="agent-toast">
+                <span class="toast-icon"></span>
+                <span class="toast-text"></span>
+                <button class="toast-stop" onclick="stopGeneration()">Stop</button>
+            </div>
             <div id="chat-container"></div>
 
             <div class="input-area">
@@ -813,6 +1007,15 @@ HTML_TEMPLATE = """
                         <button id="send-btn" onclick="sendMessage()">Send</button>
                         <button id="stop-btn" onclick="stopGeneration()">Stop</button>
                     </div>
+                </div>
+                <div class="model-selector">
+                    <label for="model-select">Model:</label>
+                    <select id="model-select" onchange="changeModel(this.value)">
+                        <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+                        <option value="claude-opus-4-20250514">Claude Opus 4</option>
+                        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                        <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+                    </select>
                 </div>
             </div>
 
@@ -912,6 +1115,11 @@ HTML_TEMPLATE = """
             }
 
             if (data.type === 'tool_use') {
+                // Clear current response ID so any subsequent text creates a new element
+                // This ensures tool messages appear in the correct order relative to text
+                const currentEl = document.getElementById('current-response');
+                if (currentEl) currentEl.id = '';
+
                 const msgEl = document.createElement('div');
                 msgEl.className = 'message tool';
                 msgEl.innerHTML = `
@@ -923,6 +1131,10 @@ HTML_TEMPLATE = """
             }
 
             if (data.type === 'tool_result') {
+                // Clear current response ID so any subsequent text creates a new element
+                const currentEl = document.getElementById('current-response');
+                if (currentEl) currentEl.id = '';
+
                 const msgEl = document.createElement('div');
                 msgEl.className = 'message tool';
                 msgEl.innerHTML = `
@@ -931,6 +1143,10 @@ HTML_TEMPLATE = """
                 `;
                 container.appendChild(msgEl);
                 container.scrollTop = container.scrollHeight;
+
+                // Refresh file list and tasks after tool execution
+                refreshFiles();
+                refreshTasks();
             }
 
             if (data.type === 'interrupted') {
@@ -938,7 +1154,8 @@ HTML_TEMPLATE = """
                 msgEl.className = 'message system';
                 msgEl.textContent = 'Generation stopped';
                 container.appendChild(msgEl);
-                finishProcessing();
+                hideAgentToast();
+                finishProcessing(true);  // Skip complete toast on interrupt
             }
 
             if (data.type === 'done') {
@@ -967,24 +1184,55 @@ HTML_TEMPLATE = """
             }
         }
 
-        function finishProcessing() {
+        // Toast notification functions
+        function showAgentWorking() {
+            const toast = document.getElementById('agent-toast');
+            toast.querySelector('.toast-icon').textContent = '⚡';
+            toast.querySelector('.toast-text').textContent = 'Agent is thinking...';
+            toast.querySelector('.toast-stop').style.display = 'block';
+            toast.classList.remove('complete');
+            toast.classList.add('visible');
+        }
+
+        function showAgentComplete() {
+            const toast = document.getElementById('agent-toast');
+            toast.querySelector('.toast-icon').textContent = '✓';
+            toast.querySelector('.toast-text').textContent = 'Response complete';
+            toast.querySelector('.toast-stop').style.display = 'none';
+            toast.classList.add('complete');
+
+            setTimeout(() => {
+                toast.classList.remove('visible', 'complete');
+            }, 2000);
+        }
+
+        function hideAgentToast() {
+            document.getElementById('agent-toast').classList.remove('visible', 'complete');
+        }
+
+        function finishProcessing(skipCompleteToast = false) {
             isProcessing = false;
             document.getElementById('stop-btn').classList.remove('visible');
             updateStatus('Connected', 'status-connected');
+            if (!skipCompleteToast) {
+                showAgentComplete();
+            }
 
-            // Process next queued message if any
+            // Process next queued message if any (with small delay to let DOM settle)
             if (messageQueue.length > 0) {
-                const nextQuery = messageQueue.shift();
-                updateQueueStatus();
+                requestAnimationFrame(() => {
+                    const nextQuery = messageQueue.shift();
+                    updateQueueStatus();
 
-                // Update the queued message to show it's now being processed
-                const queuedMsgs = document.querySelectorAll('.message.queued');
-                if (queuedMsgs.length > 0) {
-                    queuedMsgs[0].classList.remove('queued');
-                    queuedMsgs[0].classList.add('user');
-                }
+                    // Update the queued message to show it's now being processed
+                    const queuedMsgs = document.querySelectorAll('.message.queued');
+                    if (queuedMsgs.length > 0) {
+                        queuedMsgs[0].classList.remove('queued');
+                        queuedMsgs[0].classList.add('user');
+                    }
 
-                processQuery(nextQuery);
+                    processQuery(nextQuery);
+                });
             }
         }
 
@@ -1036,6 +1284,7 @@ HTML_TEMPLATE = """
             isProcessing = true;
             document.getElementById('stop-btn').classList.add('visible');
             updateStatus('Processing...', 'status-processing');
+            showAgentWorking();
 
             // Add typing indicator
             const container = document.getElementById('chat-container');
@@ -1618,11 +1867,77 @@ HTML_TEMPLATE = """
             }
         });
 
+        // Task progress functions
+        async function refreshTasks() {
+            try {
+                const response = await fetch('/api/tasks');
+                const tasks = await response.json();
+                renderTasks(tasks);
+            } catch (err) {
+                console.error('Failed to load tasks:', err);
+            }
+        }
+
+        function renderTasks(tasks) {
+            const container = document.getElementById('tasks-content');
+
+            if (!tasks.main_task) {
+                container.innerHTML = '<div class="tasks-empty">No active tasks</div>';
+                return;
+            }
+
+            const subtasks = tasks.subtasks || [];
+            const complete = subtasks.filter(t => t.status === 'complete').length;
+            const total = subtasks.length;
+            const progress = total > 0 ? Math.round((complete / total) * 100) : 0;
+
+            const statusIcons = {
+                'complete': '✓',
+                'in_progress': '⚡',
+                'pending': '○',
+                'blocked': '⚠',
+                'skipped': '–'
+            };
+
+            let html = `
+                <div class="task-main">
+                    <div class="task-main-title">${escapeHtml(tasks.main_task.description)}</div>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="task-progress-text">${complete}/${total} subtasks complete</div>
+                </div>
+            `;
+
+            if (subtasks.length > 0) {
+                html += subtasks.map(task => `
+                    <div class="subtask-item" title="${escapeHtml(task.description || task.name)}">
+                        <span class="subtask-status ${task.status}">${statusIcons[task.status] || '○'}</span>
+                        <span class="subtask-name">${escapeHtml(task.name)}</span>
+                    </div>
+                `).join('');
+            }
+
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, '&amp;')
+                       .replace(/</g, '&lt;')
+                       .replace(/>/g, '&gt;')
+                       .replace(/"/g, '&quot;');
+        }
+
         // Connect on load
         connect();
 
-        // Load files on startup
+        // Load files and tasks on startup
         refreshFiles();
+        refreshTasks();
+
+        // Poll for task updates every 5 seconds
+        setInterval(refreshTasks, 5000);
     </script>
 </body>
 </html>
@@ -1681,10 +1996,20 @@ async def get_output_file(filename: str):
     return {"error": "File not found"}
 
 
+@app.get("/api/tasks")
+async def get_task_progress():
+    """Get current task progress from .task-progress.json."""
+    from research_agent.tasks import TaskProgress
+
+    progress = TaskProgress.load()
+    return progress.to_dict()
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """Handle WebSocket connections for real-time chat with interrupt support."""
     await websocket.accept()
+    logger.info("WebSocket connected")
 
     session_id = None
     client = None
@@ -1742,6 +2067,7 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_json()
 
             if data.get("type") == "new_session":
+                logger.info("New session requested - destroying client")
                 # Cancel any ongoing response
                 if response_task and not response_task.done():
                     response_task.cancel()
@@ -1774,6 +2100,7 @@ async def websocket_endpoint(websocket: WebSocket):
             if data.get("type") == "set_model":
                 # Change the model - requires closing current client
                 new_model = data.get("model", "claude-sonnet-4-20250514")
+                logger.info(f"Model changed to {new_model} - destroying client")
                 selected_model = new_model
 
                 # Close existing client if any
@@ -1796,6 +2123,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 try:
                     # Create or reuse client
                     if client is None:
+                        logger.info(f"Creating new client for model {selected_model}")
                         options = get_agent_options(model=selected_model)
                         client = ClaudeSDKClient(options=options)
                         await client.__aenter__()
@@ -1805,6 +2133,8 @@ async def websocket_endpoint(websocket: WebSocket):
                             "session_id": str(session_id),
                             "model": selected_model
                         })
+                    else:
+                        logger.info(f"Reusing existing client (session_id={session_id})")
 
                     # Send query
                     await client.query(query)
