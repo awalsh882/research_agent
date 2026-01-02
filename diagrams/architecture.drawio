@@ -1,11 +1,11 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36" version="29.2.9">
   <diagram name="Claude Agent SDK Flow" id="flow-diagram">
-    <mxGraphModel dx="1425" dy="740" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+    <mxGraphModel dx="1051" dy="557" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="bg" parent="1" style="rounded=20;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=none" value="" vertex="1">
-          <mxGeometry height="960" width="1360" x="20" y="20" as="geometry" />
+          <mxGeometry height="960" width="1360" x="19" y="19" as="geometry" />
         </mxCell>
         <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;fontColor=#2D3748" value="Claude Agent SDK - MCP Architecture Flow" vertex="1">
           <mxGeometry height="40" width="600" x="400" y="40" as="geometry" />

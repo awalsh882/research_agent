@@ -96,7 +96,12 @@ def _create_docx_report(
     if sections.get("key_highlights"):
         doc.add_heading("KEY HIGHLIGHTS", level=1)
         for highlight in sections["key_highlights"]:
-            doc.add_paragraph(highlight, style='List Bullet')
+            # Ensure highlight is a clean string (not iterated char-by-char)
+            if isinstance(highlight, str):
+                # Clean up the text - remove extra whitespace and ensure single-line
+                clean_text = ' '.join(highlight.split())
+                if clean_text:
+                    doc.add_paragraph(clean_text, style='List Bullet')
 
     # Financial Analysis
     if sections.get("financial_analysis"):
@@ -121,17 +126,30 @@ def _create_docx_report(
         doc.add_heading("KEY RISKS", level=1)
         for i, risk in enumerate(sections["risks"], 1):
             if isinstance(risk, dict):
-                doc.add_heading(f"{i}. {risk.get('title', 'Risk')}", level=2)
-                para = doc.add_paragraph(risk.get("description", ""))
+                title = risk.get('title', 'Risk')
+                description = risk.get("description", "")
+                # Clean up text
+                if isinstance(title, str):
+                    title = ' '.join(title.split())
+                if isinstance(description, str):
+                    description = ' '.join(description.split())
+                doc.add_heading(f"{i}. {title}", level=2)
+                para = doc.add_paragraph(description)
                 para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            else:
-                doc.add_paragraph(f"{i}. {risk}", style='List Bullet')
+            elif isinstance(risk, str):
+                clean_text = ' '.join(risk.split())
+                if clean_text:
+                    doc.add_paragraph(f"{i}. {clean_text}", style='List Bullet')
 
     # Key Takeaways
     if sections.get("key_takeaways"):
         doc.add_heading("KEY TAKEAWAYS", level=1)
         for takeaway in sections["key_takeaways"]:
-            doc.add_paragraph(takeaway, style='List Bullet')
+            # Ensure takeaway is a clean string (not iterated char-by-char)
+            if isinstance(takeaway, str):
+                clean_text = ' '.join(takeaway.split())
+                if clean_text:
+                    doc.add_paragraph(clean_text, style='List Bullet')
 
     # Disclaimer
     doc.add_paragraph()
