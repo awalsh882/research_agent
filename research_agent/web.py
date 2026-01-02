@@ -579,6 +579,46 @@ HTML_TEMPLATE = """
             font-size: 0.85rem;
         }
 
+        /* Task checklist styling */
+        .task-checklist {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0 0 0;
+        }
+        .task-item {
+            padding: 0.4rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        .task-icon {
+            font-size: 1rem;
+            width: 1.2rem;
+            text-align: center;
+        }
+        .task-item.completed {
+            color: #68d391;
+        }
+        .task-item.completed .task-icon {
+            color: #48bb78;
+        }
+        .task-item.in-progress {
+            color: #fbd38d;
+        }
+        .task-item.in-progress .task-icon {
+            color: #f6ad55;
+        }
+        .task-item.pending {
+            color: #a0aec0;
+        }
+        .task-item.pending .task-icon {
+            color: #718096;
+        }
+
         .message.queued {
             background: #2d2d44;
             border: 1px dashed #666;
@@ -1137,8 +1177,35 @@ HTML_TEMPLATE = """
                     toolDisplay = 'Web Search';
                     contentDisplay = `Searching for: ${data.input?.query || 'information'}`;
                 } else if (simpleToolName === 'update_tasks' || toolName.includes('update_tasks')) {
-                    toolDisplay = 'Updating Tasks';
-                    contentDisplay = 'Updating task progress...';
+                    toolDisplay = data.input?.main_task || 'Task Progress';
+                    // Parse todos and render as checklist
+                    let todosData = [];
+                    try {
+                        const todosStr = data.input?.todos || '[]';
+                        todosData = JSON.parse(todosStr);
+                    } catch (e) {
+                        todosData = [];
+                    }
+                    if (todosData.length > 0) {
+                        contentDisplay = '<ul class="task-checklist">';
+                        for (const todo of todosData) {
+                            const status = todo.status || 'pending';
+                            let icon = '○';  // pending
+                            let statusClass = 'pending';
+                            if (status === 'completed' || status === 'complete') {
+                                icon = '✓';
+                                statusClass = 'completed';
+                            } else if (status === 'in_progress') {
+                                icon = '◐';
+                                statusClass = 'in-progress';
+                            }
+                            const text = todo.content || todo.name || '';
+                            contentDisplay += `<li class="task-item ${statusClass}"><span class="task-icon">${icon}</span> ${text}</li>`;
+                        }
+                        contentDisplay += '</ul>';
+                    } else {
+                        contentDisplay = 'Updating task progress...';
+                    }
                 } else {
                     // Default: show tool name and abbreviated input
                     toolDisplay = simpleToolName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
