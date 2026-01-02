@@ -1120,11 +1120,36 @@ HTML_TEMPLATE = """
                 const currentEl = document.getElementById('current-response');
                 if (currentEl) currentEl.id = '';
 
+                // Format tool display - extract simple name and create user-friendly messages
+                const toolName = data.tool_name.toLowerCase();
+                const simpleToolName = toolName.split('__').pop();  // Get last part after mcp prefix
+
+                // Create user-friendly display for specific tools
+                let toolDisplay = '';
+                let contentDisplay = '';
+
+                if (simpleToolName === 'generate_report' || toolName.includes('generate_report')) {
+                    const company = data.input?.company_name || 'company';
+                    const ticker = data.input?.ticker || '';
+                    toolDisplay = 'Generating Report';
+                    contentDisplay = `Creating equity research report for ${company}${ticker ? ` (${ticker})` : ''}...`;
+                } else if (simpleToolName === 'web_search' || toolName.includes('web_search')) {
+                    toolDisplay = 'Web Search';
+                    contentDisplay = `Searching for: ${data.input?.query || 'information'}`;
+                } else if (simpleToolName === 'update_tasks' || toolName.includes('update_tasks')) {
+                    toolDisplay = 'Updating Tasks';
+                    contentDisplay = 'Updating task progress...';
+                } else {
+                    // Default: show tool name and abbreviated input
+                    toolDisplay = simpleToolName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    contentDisplay = JSON.stringify(data.input, null, 2);
+                }
+
                 const msgEl = document.createElement('div');
                 msgEl.className = 'message tool';
                 msgEl.innerHTML = `
-                    <div class="message-label">Tool: ${data.tool_name}</div>
-                    <div class="content">${data.tool_name === 'generate_report' ? 'Generating research report...' : JSON.stringify(data.input, null, 2)}</div>
+                    <div class="message-label">${toolDisplay}</div>
+                    <div class="content">${contentDisplay}</div>
                 `;
                 container.appendChild(msgEl);
                 container.scrollTop = container.scrollHeight;
@@ -1135,11 +1160,21 @@ HTML_TEMPLATE = """
                 const currentEl = document.getElementById('current-response');
                 if (currentEl) currentEl.id = '';
 
+                // Check if this is a report generation result
+                const content = data.content || '';
+                let displayContent = content;
+                let label = 'Tool Result';
+
+                if (content.includes('Reports generated successfully') || content.includes('HTML report generated')) {
+                    label = 'Report Generated';
+                    displayContent = '✅ Report generated successfully! Check the Files panel to view.';
+                }
+
                 const msgEl = document.createElement('div');
                 msgEl.className = 'message tool';
                 msgEl.innerHTML = `
-                    <div class="message-label">Tool Result</div>
-                    <div class="content">${formatMarkdown(data.content)}</div>
+                    <div class="message-label">${label}</div>
+                    <div class="content">${formatMarkdown(displayContent)}</div>
                 `;
                 container.appendChild(msgEl);
                 container.scrollTop = container.scrollHeight;
