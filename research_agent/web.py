@@ -35,6 +35,11 @@ from research_agent.agent import get_agent_options
 
 app = FastAPI(title="Investment Research Agent")
 
+# Mount static files directory
+STATIC_DIR = Path(__file__).parent / "static"
+TEMPLATES_DIR = Path(__file__).parent / "templates"
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
 # Store active sessions
 sessions: dict[str, ClaudeSDKClient] = {}
 
@@ -2063,6 +2068,10 @@ async def get_favicon():
 @app.get("/", response_class=HTMLResponse)
 async def get_home():
     """Serve the main HTML page."""
+    template_path = TEMPLATES_DIR / "index.html"
+    if template_path.exists():
+        return template_path.read_text()
+    # Fallback to embedded template if file doesn't exist
     return HTML_TEMPLATE
 
 
