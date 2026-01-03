@@ -112,6 +112,9 @@ class WebSocketHandler:
             return
 
         try:
+            # Execute task planning hook before agent processes
+            await self._execute_task_planning_hook(query)
+
             await self._ensure_client()
             await self._client.query(query)
             self._response_task = asyncio.create_task(self._stream_response())
@@ -120,6 +123,28 @@ class WebSocketHandler:
             pass
         except Exception as e:
             await self._send_error(str(e))
+
+    async def _execute_task_planning_hook(self, query: str) -> None:
+        """Execute the task planning hook to auto-create task plans.
+
+        Args:
+            query: The user's query text.
+        """
+        try:
+            from research_agent.hooks import TaskPlanningHook
+
+            hook = TaskPlanningHook()
+            plan_created = await hook.execute(query, preserve_existing=True)
+
+            if plan_created:
+                # Notify frontend that tasks were auto-created
+                await self._websocket.send_json({
+                    "type": "tasks_updated",
+                    "auto_created": True,
+                })
+        except Exception as e:
+            # Don't fail the query if hook fails - just log it
+            logger.warning(f"Task planning hook failed: {e}")
 
     async def _ensure_client(self) -> None:
         """Create client if needed, or reuse existing."""

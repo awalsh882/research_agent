@@ -189,6 +189,7 @@ class ToolRegistry:
         from research_agent.tools import web_search  # noqa: F401
         from research_agent.tools import report_tool  # noqa: F401
         from research_agent.tools import task_tool  # noqa: F401
+        from research_agent.tools import task_plan_tool  # noqa: F401
         from research_agent.tools import introspection  # noqa: F401
 
         cls._initialized = True

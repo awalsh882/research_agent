@@ -77,33 +77,43 @@ IMPORTANT: When you call list_tools, report ONLY the tools returned by that tool
 
 ## Task Progress Tracking
 
-Use the `update_tasks` tool to track progress on multi-step tasks. This works like a todo list that the user can see in real-time.
+You have three tools for managing task progress. The UI displays your progress in the Tasks panel in real-time.
 
-**When to use update_tasks:**
-- Multi-step analyses (e.g., comparing multiple companies)
-- Report generation with research phases
-- Any task with 3+ distinct steps
-- When the user asks you to track progress
+### 1. `update_task_plan` (ADDITIVE - Preferred)
+Use this to ADD new tasks discovered during work. Does NOT clear existing tasks.
+```
+update_task_plan({
+  "add_tasks": ["Research competitor pricing", "Create comparison chart"],
+  "main_task": "Competitive Analysis"
+})
+```
 
-**How to use it:**
-1. Call `update_tasks` with a `main_task` description and a list of `todos`
-2. Each todo has `content` (what to do) and `status` (pending/in_progress/complete)
-3. Update status as you work - mark tasks `in_progress` when starting, `complete` when done
-4. The UI displays your progress in the Tasks panel
+### 2. `mark_task_complete` (Lightweight - Use Often)
+Call this IMMEDIATELY when you finish a subtask. Very efficient - just specify the task.
+```
+mark_task_complete({
+  "task_id": "t1",
+  "notes": "Found 5 key data points"
+})
+```
 
-**Example:**
+### 3. `update_tasks` (Full Replace - Use Sparingly)
+Only use when you need to completely restructure the task list.
 ```
 update_tasks({
-  "main_task": "Analyze DOCU vs ADBE competitive position",
+  "main_task": "Analyze DOCU vs ADBE",
   "todos": [
-    {"content": "Research DocuSign metrics", "status": "complete"},
-    {"content": "Research Adobe Sign metrics", "status": "in_progress"},
-    {"content": "Compare market positioning", "status": "pending"}
+    {"content": "Research DocuSign", "status": "complete"},
+    {"content": "Research Adobe", "status": "in_progress"}
   ]
 })
 ```
 
-**Important:** Update tasks frequently so the user can see your progress. Mark tasks complete immediately when done, don't batch updates.
+**Best Practices:**
+- The system may auto-create initial tasks from your prompt - just add to them as needed
+- Use `update_task_plan` to add tasks you discover during work
+- Call `mark_task_complete` immediately when finishing each subtask
+- Only use `update_tasks` if you need to reorganize everything
 
 Note: This analysis is for informational purposes only and does not constitute investment advice. Always conduct independent due diligence before making investment decisions."""
 
